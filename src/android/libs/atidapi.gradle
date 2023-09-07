@@ -1,0 +1,22 @@
+repositories{
+    jcenter()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    compile(name:'atid.dev.rfid_v2.32.2022062000', ext:'aar')
+    compile(name:'atid.system.comm_v1.18.2021070700', ext:'aar')
+    compile(name:'atid.system.ctrl_v1.20.2021070700', ext:'aar')
+    compile(name:'atid.system.device_v1.16.2021070700', ext:'aar')
+    compile(name:'atid.system.jcomm_v1.23.2022062000', ext:'aar')
+    compile(name:'atid.util_v1.19.2022062000', ext:'aar')
+}
+
+android {
+    packagingOptions {
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+    }
+}

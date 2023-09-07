@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="libs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/src/android/libs/cw-deviceapi20190815.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/android/libs/IGLBarDecoder.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/android/libs/jxl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/android/libs/xUtils-2.5.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
