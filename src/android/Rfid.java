@@ -6,6 +6,10 @@ import com.atid.lib.dev.event.RfidReaderEventListener;
 import com.atid.lib.dev.rfid.type.ActionState;
 import com.atid.lib.dev.rfid.type.ConnectionState;
 import com.atid.lib.dev.rfid.type.ResultCode;
+import com.atid.lib.dev.rfid.param.RangeValue;
+import com.atid.lib.dev.rfid.type.TagType;
+import com.atid.lib.dev.rfid.exception.ATRfidReaderException;
+import com.atid.lib.dev.rfid.type.BankType;
 import com.atid.lib.diagnostics.ATLog;
 
 
@@ -106,7 +110,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("wakeup")){
         Log.i(TAG, "+- wakeup scanner");
-        ATRfidManager.wakeup();
+        ATRfidManager.wakeUp();
         /*if(mReader != null)
             ATRfidManager.wakeUp();*/
 
@@ -358,14 +362,19 @@ public void onDestroy(){
 @Override
 public void onPause(boolean multitasking) {
     super.onPause(multitasking);
-    stopInventory();
+    if (mReader != null) {
+        mReader.removeEventListener(rfidEventListener);
+        ATRfidManager.sleep();
+    }
+    //stopInventory();
 }
 
 @Override
-public void onResume(){
-    super.onResume();
+public void onResume(boolean multitasking) {
+    super.onResume(multitasking);
     if (mReader != null) {
         mReader.setEventListener(rfidEventListener);
+        ATRfidManager.wakeUp();
     }
 }
 
@@ -373,11 +382,7 @@ public void onResume(){
 private void deinitalize(){
     Log.i(TAG, "+++ onDeinitalize");
     stopInventory();
-    if (mReader != null) {
-        mReader.free();
-        //mReader.free();
-	}
-
+    ATRfidManager.onDestroy();
     Log.i(TAG, "--- onDeinitalize");
 }
 

@@ -1,5 +1,5 @@
-# cordova-plugin-RFID72
-Phonegap/Cordova based RFID and barcode scanning plugin for the RFID 72 handheld scanner
+# cordova-plugin-AT907
+Phonegap/Cordova based RFID and barcode scanning plugin for the ATID AT907 handheld scanner
 
 Developed by Simplicity Solutions Group
 
