@@ -557,7 +557,7 @@ class RfidEventListenerImpl implements RfidReaderEventListener {
 
     @Override
     public void onReaderReadTag(ATRfidReader reader, String epc, float rssi, float phase) {
-        ATLog.i(TAG, "EVENT. onReaderReadTag([%s], %.2f, %.2f)", tag, rssi, phase);
+        ATLog.i(TAG, "EVENT. onReaderReadTag([%s], %.2f, %.2f)", epc, rssi, phase);
         String rssiString = Float.toString(rssi);
         epc = epc.substring(4);
         if (this.isEnabled("returnDistinct")){
