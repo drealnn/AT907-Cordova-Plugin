@@ -28,7 +28,6 @@ public class Barcode extends CordovaPlugin {
 
 private static final String TAG = "MainActivity";
 
-private Barcode2DWithSoft mScanner =null;
 private PowerManager.WakeLock mWakeLock = null;
 private SoundPool mSoundPool;
 private int mBeepSuccess;
@@ -38,6 +37,8 @@ private CallbackContext keyup_callback = null;
 private CallbackContext keydown_callback = null;
 private CallbackContext getDecode_callback = null;
 private View currentView = null;
+
+private Activity cordovaActivity;
 private Context ctx;
 private ScanUtil scanUtil;
 
@@ -176,12 +177,13 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
 @Override
 public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     super.initialize(cordova, webView);
-    this.ctx = cordova.getActivity().getApplicationContext();
+    this.cordovaActivity = cordova.getActivity();
+    this.ctx = cordovaActivity.getApplicationContext();
 	SoundLoader.getInstance(ctx);
     scanUtil = new ScanUtil(ctx);
     IntentFilter filter = new IntentFilter();
     filter.addAction("com.rfid.SCAN");
-    registerReceiver(receiver, filter);
+    cordovaActivity.registerReceiver(receiver, filter);
 
 //    boolean result = false;
 //    if(mScanner != null) {
@@ -282,7 +284,7 @@ public void onResume(boolean multitasking){
 
 private void deinitalize(){
     Log.i(TAG, "+++ onDeinitalize");
-    unregisterReceiver(receiver);
+    cordovaActivity.unregisterReceiver(receiver);
     scanUtil.setScanMode(1);
     scanUtil.close();
     scanUtil = null;
