@@ -1,14 +1,16 @@
 package com.at907.app;
 
-import android.content.Context;
 import android.media.SoundPool;
 import android.os.AsyncTask;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 
-import com.zebra.adc.decoder.Barcode2DWithSoft;
 
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CallbackContext;
@@ -37,6 +39,25 @@ private CallbackContext keydown_callback = null;
 private CallbackContext getDecode_callback = null;
 private View currentView = null;
 private Context ctx;
+private ScanUtil scanUtil;
+
+private BroadcastReceiver receiver = new BroadcastReceiver() {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        PluginResult result;
+        byte[] data = intent.getByteArrayExtra("data");
+        if (data != null) {
+//                String barcode = Tools.Bytes2HexString(data, data.length);
+            String barcode = new String(data);
+            result = new PluginResult(PluginResult.Status.OK, barcode);
+            SoundLoader.getInstance(context).playSuccess();
+        } else {
+            result = new PluginResult(PluginResult.Status.ERROR, "Scan Fail");
+        }
+        result.setKeepCallback(true);
+        getDecode_callback.sendPluginResult(result);
+    }
+};
 
 //ScanResult mScanResult;
 
@@ -73,14 +94,18 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     else if (action.equals("scanner_startDecode")){
         Log.i(TAG, "++Start Decode");
         //mScanResult = null;
-        this.mScanner.scan();
+        if (scanUtil != null) {
+            scanUtil.scan();
+        }
         Log.i(TAG, "--Start Decode");
         
         return true;
     }
     else if (action.equals("scanner_stopDecode")){
         Log.i(TAG, "++Stop Decode");
-        this.mScanner.stopScan();
+        if (scanUtil != null) {
+            scanUtil.stopScan();
+        }
         Log.i(TAG, "--Stop Decode");
         
         return true;
@@ -122,98 +147,102 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     return false;
 }
 
-public Barcode2DWithSoft.ScanCallback  ScanBack = new Barcode2DWithSoft.ScanCallback(){
-    @Override
-    public void onScanComplete(int i, int length, byte[] bytes) {
-        PluginResult result;
-        if (length < 1) {
-            String errorMessage = "";
-            if (length == -1) {
-                errorMessage = "Scan Cancel";
-            } else if (length == 0) {
-                errorMessage = "Scan timeout";
-            } else {
-                errorMessage = "Scan fail";
-            }
-            Log.e(TAG, errorMessage);
-            result = new PluginResult(PluginResult.Status.ERROR, errorMessage);
-        } else {
-            String barcode = new String(bytes, 0, length, StandardCharsets.US_ASCII);
-            //result = new PluginResult(PluginResult.Status.OK, new JSONObject("{\'type\': \'N/A\' , \'barcode\': \'" + barcode + "\' }"));
-			result = new PluginResult(PluginResult.Status.OK, barcode);
-            SoundLoader.getInstance(ctx).playSuccess();
-        }
-        result.setKeepCallback(true);
-        getDecode_callback.sendPluginResult(result);
-    }
-};
+//public Barcode2DWithSoft.ScanCallback  ScanBack = new Barcode2DWithSoft.ScanCallback(){
+//    @Override
+//    public void onScanComplete(int i, int length, byte[] bytes) {
+//        PluginResult result;
+//        if (length < 1) {
+//            String errorMessage = "";
+//            if (length == -1) {
+//                errorMessage = "Scan Cancel";
+//            } else if (length == 0) {
+//                errorMessage = "Scan timeout";
+//            } else {
+//                errorMessage = "Scan fail";
+//            }
+//            Log.e(TAG, errorMessage);
+//            result = new PluginResult(PluginResult.Status.ERROR, errorMessage);
+//        } else {
+//            String barcode = new String(bytes, 0, length, StandardCharsets.US_ASCII);
+//            //result = new PluginResult(PluginResult.Status.OK, new JSONObject("{\'type\': \'N/A\' , \'barcode\': \'" + barcode + "\' }"));
+//			result = new PluginResult(PluginResult.Status.OK, barcode);
+//            SoundLoader.getInstance(ctx).playSuccess();
+//        }
+//        result.setKeepCallback(true);
+//        getDecode_callback.sendPluginResult(result);
+//    }
+//};
 
 @Override
 public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     super.initialize(cordova, webView);
     this.ctx = cordova.getActivity().getApplicationContext();
 	SoundLoader.getInstance(ctx);
-    mScanner = Barcode2DWithSoft.getInstance();
-    boolean result = false;
-    if(mScanner != null) {
-        result = mScanner.open(ctx);
-        Log.i(TAG,"open="+result);
-        if(result){
-//                mScanner.setParameter(324, 1);
-//                mScanner.setParameter(300, 0); // Snapshot Aiming
-//                mScanner.setParameter(361, 0); // Image Capture Illumination
+    scanUtil = new ScanUtil(ctx);
+    IntentFilter filter = new IntentFilter();
+    filter.addAction("com.rfid.SCAN");
+    registerReceiver(receiver, filter);
 
-            // interleaved 2 of 5
-            mScanner.setParameter(6, 1);
-            mScanner.setParameter(22, 0);
-            mScanner.setParameter(23, 55);
-            mScanner.setParameter(402, 1);
-
-            mScanner.setScanCallback(ScanBack);
-        } else {
-            Log.e(TAG, "Barcode initialization failure");
-        }
-    }
+//    boolean result = false;
+//    if(mScanner != null) {
+//        result = mScanner.open(ctx);
+//        Log.i(TAG,"open="+result);
+//        if(result){
+////                mScanner.setParameter(324, 1);
+////                mScanner.setParameter(300, 0); // Snapshot Aiming
+////                mScanner.setParameter(361, 0); // Image Capture Illumination
+//
+//            // interleaved 2 of 5
+//            mScanner.setParameter(6, 1);
+//            mScanner.setParameter(22, 0);
+//            mScanner.setParameter(23, 55);
+//            mScanner.setParameter(402, 1);
+//
+//            mScanner.setScanCallback(ScanBack);
+//        } else {
+//            Log.e(TAG, "Barcode initialization failure");
+//        }
+//    }
     this.currentView = webView.getView();
     Log.i(TAG, "Scanning device initialized");
 }
 
-public class InitScannerTask extends AsyncTask<String, Integer, Boolean> {
-    @Override
-    protected Boolean doInBackground(String... params) {
-        boolean result = false;
-        if(mScanner != null) {
-            result = mScanner.open(ctx);
-            Log.i(TAG,"open="+result);
-        }
-        return result;
-    }
-
-    @Override
-    protected void onPostExecute(Boolean result) {
-        super.onPostExecute(result);
-        if(result){
-//                mScanner.setParameter(324, 1);
-//                mScanner.setParameter(300, 0); // Snapshot Aiming
-//                mScanner.setParameter(361, 0); // Image Capture Illumination
-
-            // interleaved 2 of 5
-            mScanner.setParameter(6, 1);
-            mScanner.setParameter(22, 0);
-            mScanner.setParameter(23, 55);
-            mScanner.setParameter(402, 1);
-        } else {
-            Log.e(TAG, "Barcode initialization failure");
-        }
-    }
-
-    @Override
-    protected void onPreExecute() {
-        // TODO Auto-generated method stub
-        super.onPreExecute();
-    }
-
-}
+//public class InitScannerTask extends AsyncTask<String, Integer, Boolean> {
+//    @Override
+//    protected Boolean doInBackground(String... params) {
+//        boolean result = false;
+//        if(mScanner != null) {
+//            result = mScanner.open(ctx);
+//            Log.i(TAG,"open="+result);
+//        }
+//        return result;
+//    }
+//
+//    @Override
+//    protected void onPostExecute(Boolean result) {
+//        super.onPostExecute(result);
+//        if(result){
+////                mScanner.setParameter(324, 1);
+////                mScanner.setParameter(300, 0); // Snapshot Aiming
+////                mScanner.setParameter(361, 0); // Image Capture Illumination
+//
+//            // interleaved 2 of 5
+//            mScanner.setParameter(6, 1);
+//            mScanner.setParameter(22, 0);
+//            mScanner.setParameter(23, 55);
+//            mScanner.setParameter(402, 1);
+//        } else {
+//            Log.e(TAG, "Barcode initialization failure");
+//        }
+//    }
+//
+//    @Override
+//    protected void onPreExecute() {
+//        // TODO Auto-generated method stub
+//        super.onPreExecute();
+//    }
+//
+//}
 
 private void echo(String message, CallbackContext callbackContext) {
     if (message != null && message.length() > 0) {
@@ -232,21 +261,123 @@ public void onDestroy(){
 @Override
 public void onPause(boolean multitasking) {
     super.onPause(multitasking);
-    mScanner.stopScan();
+    if (scanUtil != null) {
+        scanUtil.setScanMode(1);
+        scanUtil.close();
+        scanUtil = null;
+    }
 }
 
 @Override
 public void onResume(boolean multitasking){
     super.onResume(multitasking);
+    if (scanUtil == null) {
+        scanUtil = new ScanUtil(this.ctx);
+        //we must set mode to 0 : BroadcastReceiver mode
+        scanUtil.setScanMode(0);
+    }
     //initScanner();
 }
 
 
 private void deinitalize(){
     Log.i(TAG, "+++ onDeinitalize");
-    mScanner.stopScan();
-    mScanner.close();
+    unregisterReceiver(receiver);
+    scanUtil.setScanMode(1);
+    scanUtil.close();
+    scanUtil = null;
     Log.i(TAG, "--- onDeinitalize");
+}
+
+public class ScanUtil {
+
+    /**
+     * Open scan service
+     */
+    private final String ACTION_SCAN_INIT = "com.rfid.SCAN_INIT";
+    /**
+     * Scanning
+     */
+    private final String ACTION_SCAN = "com.rfid.SCAN_CMD";
+    /**
+     * Stop Scanning
+     */
+    private static final String ACTION_STOP_SCAN = "com.rfid.STOP_SCAN";
+    /**
+     * Close scan service
+     */
+    private final String ACTION_CLOSE_SCAN = "com.rfid.CLOSE_SCAN";
+    /**
+     * Scan result output mode, 0 -- BroadcastReceiver mode; 1 -- Focus input mode (default)
+     */
+    private final String ACTION_SET_SCAN_MODE = "com.rfid.SET_SCAN_MODE";
+    /**
+     * Scan timeout (Value:1000,2000,3000,4000,5000,6000,7000,8000,9000,10000)
+     */
+    private final String ACTION_SCAN_TIME = "com.rfid.SCAN_TIME";
+
+    private Context context;
+
+    /**
+     * Initialize ScanUtil and open scan service
+     * @param context Context
+     */
+    ScanUtil(Context context) {
+        this.context = context;
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SCAN_INIT);
+        context.sendBroadcast(intent);
+    }
+
+    /**
+     * Start Scanning
+     */
+    public void scan() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SCAN);
+        context.sendBroadcast(intent);
+    }
+
+    /**
+     * Stop Scanning
+     */
+    public void stopScan() {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_STOP_SCAN);
+        context.sendBroadcast(intent);
+    }
+
+    /**
+     * Set the scan result output mode
+     * @param mode 0 -- BroadcastReceiver mode; 1 -- Focus input mode (default)
+     */
+    public void setScanMode(int mode) {
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SET_SCAN_MODE);
+        intent.putExtra("mode", mode);
+        context.sendBroadcast(intent);
+    }
+
+    /**
+     * Close scan service
+     */
+    public void close() {
+        Intent toKillService = new Intent();
+//        toKillService.putExtra("iscamera", true);
+        toKillService.setAction(ACTION_CLOSE_SCAN);
+        context.sendBroadcast(toKillService);
+    }
+
+    /**
+     * Set scan timeout
+     * @param timeout Value:1000,2000,3000,4000,5000(default),6000,7000,8000,9000,10000
+     */
+    public void setTimeout(String timeout){
+        Intent intent = new Intent();
+        intent.setAction(ACTION_SCAN_TIME);
+        intent.putExtra("time", timeout);
+        context.sendBroadcast(intent);
+    }
 }
 
 /*@Override
