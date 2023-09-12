@@ -185,9 +185,13 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     else if (action.equals("getPower")){
         Log.i(TAG, "++Get Power");
         try {
-            int power = mReader.getPower();
-            if (power > -1){
-                callbackContext.success("" + power);
+            if (mReader.getState() == ConnectionState.Connected) {
+                int power = mReader.getPower();
+                if (power > -1) {
+                    callbackContext.success("" + power);
+                } else {
+                    callbackContext.error("failed to get power");
+                }
             } else {
                 callbackContext.error("failed to get power");
             }
@@ -201,8 +205,10 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     else if (action.equals("setPower")){
         Log.i(TAG, "++set power level");
         try {
-            mReader.setPower(args.getInt(0));
-            callbackContext.success("successfully set power level to "+args.getInt(0));
+            if (mReader.getState() == ConnectionState.Connected) {
+                mReader.setPower(args.getInt(0));
+                callbackContext.success("successfully set power level to " + args.getInt(0));
+            }
         } catch (ATRfidReaderException e) {
             ATLog.e(TAG, e,
                     "ERROR. saveOption() - Failed to set power level [%s]",
