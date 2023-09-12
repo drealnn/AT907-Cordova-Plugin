@@ -89,7 +89,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
 		try {
             mReader = ATRfidManager.getInstance();
             if (mReader != null) {
-                ATRfidManager.wakeUp();
+                wakupReader();
                 if (mReader.getState() == ConnectionState.Connected){
                     callbackContext.success("successfully initialized RFID device");
 					return true;
@@ -110,7 +110,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("wakeup")){
         Log.i(TAG, "+- wakeup scanner");
-        ATRfidManager.wakeUp();
+        wakupReader();
         /*if(mReader != null)
             ATRfidManager.wakeUp();*/
 
@@ -119,7 +119,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("sleep")){
         Log.i(TAG, "+- sleep scanner");
-        ATRfidManager.sleep();
+        sleepReader();
         callbackContext.success("Called sleep function");
         return true;
     }
@@ -150,9 +150,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("pause_scanner")){
         Log.i(TAG, "+- pause scanner");
-        if (mReader != null) {
-            mReader.removeEventListener(rfidEventListener);
-        }
+        sleepReader();
 //        if (mReader != null){
 //            stopInventory(callbackContext);
 //        }
@@ -161,9 +159,7 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("resume_scanner")){
         Log.i(TAG, "+- resume scanner");
-        if (mReader != null) {
-            mReader.setEventListener(rfidEventListener);
-        }
+        wakupReader();
         //if (mReader != null)
             //mReader.setEventListener(this);
         return true;
@@ -310,9 +306,11 @@ public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		SoundLoader.getInstance(ctx);
         handler = new ReadTagHandler();
 		mReader = ATRfidManager.getInstance();
+        this.currentView = webView.getView();
 		if (mReader != null) {
-            ATRfidManager.wakeUp();
-			if (mReader.getState() == ConnectionState.Connected){
+            wakupReader();
+            ConnectionState currentState = reader.getState();
+			if (currentState == ConnectionState.Connected){
                 mTagType = TagType.Tag6C;
                 // Get Power Range
                 try {
@@ -339,7 +337,6 @@ public void initialize(CordovaInterface cordova, CordovaWebView webView) {
                 ATLog.i(TAG, "INFO. initReader() - [Operation Time : %d]", mOperationTime);
 				//callbackContext.success("successfully initialized RFID device");
 				//mReader.setEventListener(this);
-				this.currentView = webView.getView();
 				Log.i(TAG, "RFID device initialized");
 			} else {
 				throw new Exception("Unable to initialize RFID");
@@ -362,20 +359,14 @@ public void onDestroy(){
 @Override
 public void onPause(boolean multitasking) {
     super.onPause(multitasking);
-    if (mReader != null) {
-        mReader.removeEventListener(rfidEventListener);
-        ATRfidManager.sleep();
-    }
+    sleepReader();
     //stopInventory();
 }
 
 @Override
 public void onResume(boolean multitasking) {
     super.onResume(multitasking);
-    if (mReader != null) {
-        mReader.setEventListener(rfidEventListener);
-        ATRfidManager.wakeUp();
-    }
+    wakupReader();
 }
 
 
@@ -384,6 +375,20 @@ private void deinitalize(){
     stopInventory();
     ATRfidManager.onDestroy();
     Log.i(TAG, "--- onDeinitalize");
+}
+
+private void wakupReader(){
+    if (mReader != null) {
+        ATRfidManager.wakeUp();
+        mReader.setEventListener(rfidEventListener);
+    }
+}
+
+private void sleepReader(){
+    if (mReader != null) {
+        mReader.removeEventListener(rfidEventListener);
+        ATRfidManager.sleep();
+    }
 }
 
 private boolean stopInventory(CallbackContext callbackContext){
@@ -403,6 +408,7 @@ private boolean stopInventory() {
 		if (loopFlag) {
             if(mReader.getState() != ConnectionState.Connected || mReader.getAction() == ActionState.Stop) {
                 ATLog.e(TAG, "ActionState is idle.");
+                loopFlag = false;
                 return false;
             }
 			loopFlag = false;

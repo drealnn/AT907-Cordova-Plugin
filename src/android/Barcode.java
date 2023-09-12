@@ -81,13 +81,22 @@ public boolean execute(String action, JSONArray args, CallbackContext callbackCo
     }
     else if (action.equals("wakeup_scanner")){
         Log.i(TAG, "+- wakeup scanner");
-        
+        if (scanUtil == null) {
+            scanUtil = new ScanUtil(this.ctx);
+            //we must set mode to 0 : BroadcastReceiver mode
+            scanUtil.setScanMode(0);
+        }
         //if(mScanner != null)
         //    ATScanManager.wakeUp();
         return true;
     }
     else if (action.equals("sleep_scanner")){
         Log.i(TAG, "+- sleep scanner");
+        if (scanUtil != null) {
+            scanUtil.setScanMode(1);
+            scanUtil.close();
+            scanUtil = null;
+        }
         /*if(mScanner != null) {
             ATScanManager.sleep();
         }*/
@@ -182,6 +191,7 @@ public void initialize(CordovaInterface cordova, CordovaWebView webView) {
     this.ctx = cordovaActivity.getApplicationContext();
 	SoundLoader.getInstance(ctx);
     scanUtil = new ScanUtil(ctx);
+    scanUtil.setScanMode(0);
     IntentFilter filter = new IntentFilter();
     filter.addAction("com.rfid.SCAN");
     cordovaActivity.registerReceiver(receiver, filter);
