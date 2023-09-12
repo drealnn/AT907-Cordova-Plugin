@@ -121,7 +121,7 @@ public class General extends CordovaPlugin {
             if (isKeyDown) {
                 if (this.pluginCtx.keydown_callback != null) {
                     try {
-                        String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", 1 + "");
+                        String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", 0 + "");
                         PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(str));
                         result.setKeepCallback(true);
                         this.pluginCtx.keydown_callback.sendPluginResult(result);
@@ -137,7 +137,7 @@ public class General extends CordovaPlugin {
                 if (this.pluginCtx.keyup_callback != null) {
                     try {
 
-                        String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", event.getRepeatCount() + "");
+                        String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", 0 + "");
                         PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(str));
                         result.setKeepCallback(true);
                         this.pluginCtx.keyup_callback.sendPluginResult(result);
