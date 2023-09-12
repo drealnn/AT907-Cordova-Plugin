@@ -2,7 +2,7 @@ var cordova = require('cordova'),
     exec = require('cordova/exec');
 
 module.exports =  {
-	scanner_handle_keycode : [133, 134, 135],
+	scanner_handle_keycode : ['133', '134', '135'],
 	onKeyUp : function(successCallback, errorCallback){
 		return exec(successCallback, errorCallback, "General", 'register_keyUp', []);
 	},
