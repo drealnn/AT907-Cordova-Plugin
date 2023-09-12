@@ -46,18 +46,20 @@ private ScanUtil scanUtil;
 private BroadcastReceiver receiver = new BroadcastReceiver() {
     @Override
     public void onReceive(Context context, Intent intent) {
-        PluginResult result;
-        byte[] data = intent.getByteArrayExtra("data");
-        if (data != null) {
+        if (getDecode_callback != null) {
+            PluginResult result;
+            byte[] data = intent.getByteArrayExtra("data");
+            if (data != null) {
 //                String barcode = Tools.Bytes2HexString(data, data.length);
-            String barcode = new String(data);
-            result = new PluginResult(PluginResult.Status.OK, barcode);
-            SoundLoader.getInstance(context).playSuccess();
-        } else {
-            result = new PluginResult(PluginResult.Status.ERROR, "Scan Fail");
+                String barcode = new String(data);
+                result = new PluginResult(PluginResult.Status.OK, barcode);
+                SoundLoader.getInstance(context).playSuccess();
+            } else {
+                result = new PluginResult(PluginResult.Status.ERROR, "Scan Fail");
+            }
+            result.setKeepCallback(true);
+            getDecode_callback.sendPluginResult(result);
         }
-        result.setKeepCallback(true);
-        getDecode_callback.sendPluginResult(result);
     }
 };
 
