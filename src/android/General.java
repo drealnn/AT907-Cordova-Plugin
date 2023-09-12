@@ -23,6 +23,7 @@ import org.apache.cordova.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class General extends CordovaPlugin {
@@ -107,6 +108,7 @@ public class General extends CordovaPlugin {
 
     private class KeyCodeReceiver extends BroadcastReceiver {
         General pluginCtx;
+        AtomicBoolean keyIsUp = new AtomicBoolean(true);
         KeyCodeReceiver(General pluginCtx) {
             this.pluginCtx = pluginCtx;
         }
@@ -120,17 +122,18 @@ public class General extends CordovaPlugin {
             boolean isKeyDown = intent.getBooleanExtra("keydown", false);
             if (isKeyDown) {
                 if (this.pluginCtx.keydown_callback != null) {
-                    try {
-                        String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", 0 + "");
-                        PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(str));
-                        result.setKeepCallback(true);
-                        this.pluginCtx.keydown_callback.sendPluginResult(result);
-                    } catch(Exception e)
-                    {
-                        e.printStackTrace();
-                        PluginResult result = new PluginResult(PluginResult.Status.ERROR, "Error in handling key event");
-                        result.setKeepCallback(true);
-                        this.pluginCtx.keydown_callback.sendPluginResult(result);
+                    if (keyIsUp.getAndSet(false)) {
+                        try {
+                            String str = String.format("{\'keyCode\': \'%s\', \'repeatCount\' : \'%s\' }", keyCode + "", 0 + "");
+                            PluginResult result = new PluginResult(PluginResult.Status.OK, new JSONObject(str));
+                            result.setKeepCallback(true);
+                            this.pluginCtx.keydown_callback.sendPluginResult(result);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            PluginResult result = new PluginResult(PluginResult.Status.ERROR, "Error in handling key event");
+                            result.setKeepCallback(true);
+                            this.pluginCtx.keydown_callback.sendPluginResult(result);
+                        }
                     }
                 }
             } else {
@@ -149,6 +152,8 @@ public class General extends CordovaPlugin {
                         result.setKeepCallback(true);
                         this.pluginCtx.keyup_callback.sendPluginResult(result);
 
+                    } finally {
+                        keyIsUp.set(true);
                     }
                 }
             }
