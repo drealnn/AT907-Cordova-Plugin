@@ -276,21 +276,21 @@ public void onDestroy(){
 @Override
 public void onPause(boolean multitasking) {
     super.onPause(multitasking);
-    if (scanUtil != null) {
-        scanUtil.setScanMode(1);
-        scanUtil.close();
-        scanUtil = null;
-    }
+//    if (scanUtil != null) {
+//        scanUtil.setScanMode(1);
+//        scanUtil.close();
+//        scanUtil = null;
+//    }
 }
 
 @Override
 public void onResume(boolean multitasking){
     super.onResume(multitasking);
-    if (scanUtil == null) {
-        scanUtil = new ScanUtil(this.ctx);
-        //we must set mode to 0 : BroadcastReceiver mode
-        scanUtil.setScanMode(0);
-    }
+//    if (scanUtil == null) {
+//        scanUtil = new ScanUtil(this.ctx);
+//        //we must set mode to 0 : BroadcastReceiver mode
+//        scanUtil.setScanMode(0);
+//    }
     //initScanner();
 }
 
