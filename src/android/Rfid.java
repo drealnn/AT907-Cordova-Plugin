@@ -457,6 +457,7 @@ private void startInventory(CallbackContext callbackContext, JSONObject options,
     }
 	try {
         rfidEventListener.setOptions(optionsMap);
+        rfidEventListener.clearEpcRssiMap();
         boolean res = false;
 		if (!loopFlag){
             if(mReader.getAction() != ActionState.Stop) {
@@ -536,6 +537,10 @@ class RfidEventListenerImpl implements RfidReaderEventListener {
                 epcFilterSet.addAll(epcTags);
             }
         }
+    }
+
+    public void clearEpcRssiMap(){
+        epcRssiMap = new HashMap<>();
     }
 
     private boolean isEnabled(String setting){
