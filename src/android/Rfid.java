@@ -309,7 +309,7 @@ public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         this.currentView = webView.getView();
 		if (mReader != null) {
             wakupReader();
-            ConnectionState currentState = reader.getState();
+            ConnectionState currentState = mReader.getState();
 			if (currentState == ConnectionState.Connected){
                 mTagType = TagType.Tag6C;
                 // Get Power Range
